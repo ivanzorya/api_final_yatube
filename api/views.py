@@ -64,8 +64,8 @@ class FollowViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 serializer.save()
                 data = {
-                    "user": user.username,
-                    "following": following.username
+                    'user': user.username,
+                    'following': following.username
                 }
                 return Response(data, status=201)
             return Response(serializer.errors, status=400)
