@@ -71,9 +71,7 @@ class FollowViewSet(viewsets.ModelViewSet):
                     status=400
                 )
             serializer = FollowSerializer(data=request.data)
-            print(serializer.initial_data)
             if serializer.is_valid():
-                print(serializer.validated_data)
                 serializer.save(user=request.user, following=following)
                 return Response(serializer.data, status=201)
             return Response(serializer.errors, status=400)
