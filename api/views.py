@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from .models import Post, Comment, Follow, Group
 from .permissions import IsOwnerOrReadOnly
 from .serializers import PostSerializer, CommentSerializer, FollowSerializer, \
-    GroupSerializer
+    GroupSerializer, FollowSlugSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -48,7 +48,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
+    serializer_class = FollowSlugSerializer
     permission_classes = [IsOwnerOrReadOnly, IsAuthenticatedOrReadOnly]
     http_method_names = ['get', 'post']
     filter_backends = [SearchFilter]
@@ -59,21 +59,15 @@ class FollowViewSet(viewsets.ModelViewSet):
         if following_name is not None:
             following = get_object_or_404(User, username=following_name)
             user = get_object_or_404(User, username=request.user)
-            if user == following:
-                return Response(
-                    {'Нельзя подписаться на самого себя'},
-                    status=400
-                )
-            follow = Follow.objects.filter(user=user, following=following)
-            if len(follow) > 0:
-                return Response(
-                    {'Вы уже подписаны на этого пользователя'},
-                    status=400
-                )
-            serializer = FollowSerializer(data=request.data)
+            data = {'user': user.pk, 'following': following.pk}
+            serializer = FollowSerializer(data=data)
             if serializer.is_valid():
-                serializer.save(user=request.user, following=following)
-                return Response(serializer.data, status=201)
+                serializer.save()
+                data = {
+                    "user": user.username,
+                    "following": following.username
+                }
+                return Response(data, status=201)
             return Response(serializer.errors, status=400)
         return Response(
             {'Вы не передали имя пользователя для фильтрации по подписчикам'},
